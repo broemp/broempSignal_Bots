@@ -4,14 +4,13 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func init_ping() command {
+func init_ping(s *discordgo.Session) {
 	const name string = "ping"
 	const description string = "Responds with Ping!"
 
-	discord_cmd := discordgo.ApplicationCommand{Name: name, Description: description}
-	cmd := command{&discord_cmd, exec_ping}
+	cmd := discordgo.ApplicationCommand{Name: name, Description: description}
 
-	return cmd
+	add_commands(s, &cmd, exec_ping)
 }
 
 func exec_ping(s *discordgo.Session, i *discordgo.InteractionCreate) {
