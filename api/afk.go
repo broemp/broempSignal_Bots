@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/broemp/broempSignal_Bots/model"
 )
@@ -57,4 +58,27 @@ func AFK_get_top_list() []model.Response_afk_toplist {
 	}
 
 	return top_list
+}
+
+func AFK_get_user(userid int64) []model.Response_afk_user {
+	endpoint := config.API_ENDPOINT + "/afk/list/" + strconv.Itoa(int(userid))
+	resp, err := http.Get(endpoint)
+	if err != nil {
+		log.Println("failed to reach endpoint: ", err)
+		return nil
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Println(err)
+	}
+
+	var afk_list []model.Response_afk_user
+
+	err = json.Unmarshal(body, &afk_list)
+	if err != nil {
+		log.Println("failed to unmarshal api response: ", err)
+	}
+
+	return afk_list
 }

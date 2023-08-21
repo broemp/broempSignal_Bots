@@ -93,8 +93,48 @@ func init_afk_list(s *discordgo.Session) {
 
 func exec_afk_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if len(i.ApplicationCommandData().Options) != 0 {
-		// Handle User
+		// User Passed
+		user := i.ApplicationCommandData().Options[0].UserValue(s)
+		userid, err := strconv.ParseInt(user.ID, 10, 64)
+		if err != nil {
+			log.Println("failed to parse userid: ", err)
+		}
+
+		afk_list := api.AFK_get_user(userid)
+		fields := []*discordgo.MessageEmbedField{
+			{
+				Name:  "Count",
+				Value: strconv.Itoa(len(afk_list)),
+			},
+		}
+
+		for _, afk := range afk_list {
+			field := discordgo.MessageEmbedField{
+				Name: afk.CreatedAt.Time.String(),
+			}
+			fields = append(fields, &field)
+		}
+
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "AFK Report",
+						Description: user.Username,
+						Color:       10181046,
+						Image: &discordgo.MessageEmbedImage{
+							URL: user.AvatarURL(""),
+						},
+						Fields: fields,
+					},
+				},
+			},
+		},
+		)
+
 	} else {
+		// No User Passed
 		log.Println("printingTopList")
 		topList := api.AFK_get_top_list()
 

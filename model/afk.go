@@ -27,3 +27,15 @@ type Response_afk_create struct {
 		Valid bool  `json:"Valid"`
 	} `json:"userid"`
 }
+
+type Response_afk_user struct {
+	CreatedAt struct {
+		Time  time.Time `json:"Time"`
+		Valid bool      `json:"Valid"`
+	} `json:"created_at"`
+	Afkid  int `json:"afkid"`
+	Userid struct {
+		Int64 int64 `json:"Int64"`
+		Valid bool  `json:"Valid"`
+	} `json:"userid"`
+}
