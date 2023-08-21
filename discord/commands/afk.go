@@ -1,6 +1,10 @@
 package commands
 
 import (
+	"log"
+	"strconv"
+
+	"github.com/broemp/broempSignal_Bots/api"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -23,10 +27,48 @@ func init_afk(s *discordgo.Session) {
 }
 
 func exec_afk(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	var message string
+
+	user := i.ApplicationCommandData().Options[0].UserValue(s)
+	userid, err := strconv.ParseInt(user.ID, 10, 64)
+	if err != nil {
+		log.Println("failed to parse userid: ", err)
+	}
+
+	afk_resp, err := api.AFK_create(userid, user.Username)
+	if err != nil {
+		message = "Failed api request" + err.Error()
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: message,
+			},
+		})
+		return
+	}
+
 	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: "Added",
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title: "AFK Report",
+					Color: 10181046,
+					Image: &discordgo.MessageEmbedImage{
+						URL: user.AvatarURL(""),
+					},
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:  "Culprit",
+							Value: user.Username,
+						},
+						{
+							Name:  "Time",
+							Value: afk_resp.CreatedAt.Time.String(),
+						},
+					},
+				},
+			},
 		},
 	})
 }
@@ -50,18 +92,29 @@ func init_afk_list(s *discordgo.Session) {
 }
 
 func exec_afk_list(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	var message string
-	if len(i.ApplicationCommandData().Options) >= 0 {
+	if len(i.ApplicationCommandData().Options) != 0 {
 		// Handle User
-		message = "List user info"
 	} else {
-		message = "Top List"
-	}
+		log.Println("printingTopList")
+		topList := api.AFK_get_top_list()
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: message,
-		},
-	})
+		var topListString string
+		for i, user := range topList {
+			topListString += strconv.Itoa(i+1) + ". " + user.Username + " " + strconv.Itoa(user.Count) + "\n"
+		}
+
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Embeds: []*discordgo.MessageEmbed{
+					{
+						Title:       "AFK TOP LIST",
+						Color:       15548997,
+						Description: topListString,
+					},
+				},
+			},
+		})
+
+	}
 }

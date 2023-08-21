@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/broemp/broempSignal_Bots/api"
 	"github.com/broemp/broempSignal_Bots/discord"
 	"github.com/broemp/broempSignal_Bots/util"
 )
@@ -13,5 +14,6 @@ func main() {
 		log.Fatal("Couldn't load config: ", err)
 	}
 
+	api.Init_API(config)
 	discord.InitDiscord(config.DISCORD_TOKEN)
 }
